@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, X, Menu, Search, Filter, Star, CheckCircle, Trash2, User, LogOut, Package, RefreshCw, CreditCard } from 'lucide-react';
 
+// --- LIVE BACKEND URL ---
+const API_URL = "https://jeans-factory.onrender.com"; 
+
 // --- Mock Data ---
 const MOCK_PRODUCTS = [
   { id: 1, name: 'Classic Blue Regular Fit', price: 1999, category: 'Regular', gender: 'Men', isSale: false, image: 'https://images.unsplash.com/photo-1542272617-08f086302542?auto=format&fit=crop&q=80&w=600', rating: 4.5 },
@@ -13,20 +16,17 @@ const MOCK_PRODUCTS = [
 export default function App() {
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [cart, setCart] = useState([]);
-  const [user, setUser] = useState(null); // User info
+  const [user, setUser] = useState(null); 
   const [token, setToken] = useState(localStorage.getItem('token'));
   
-  // Navigation State
-  const [view, setView] = useState('home'); // home, cart, login, register, myorders
+  const [view, setView] = useState('home'); 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
 
-  // Load User & Products on start
   useEffect(() => {
     if (token) {
-        // Simulate getting user details from localStorage
         const savedUser = JSON.parse(localStorage.getItem('user'));
         if(savedUser) setUser(savedUser);
         fetchMyOrders();
@@ -36,7 +36,7 @@ export default function App() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch('http://localhost:3002/api/products');
+      const res = await fetch(`${API_URL}/api/products`);
       if (res.ok) {
         const data = await res.json();
         if(data.length > 0) setProducts(data);
@@ -46,7 +46,7 @@ export default function App() {
 
   const fetchMyOrders = async () => {
       try {
-          const res = await fetch('http://localhost:3002/api/myorders', {
+          const res = await fetch(`${API_URL}/api/myorders`, {
               headers: { 'Authorization': token }
           });
           if(res.ok) {
@@ -62,7 +62,7 @@ export default function App() {
       const password = e.target.password.value;
       
       try {
-          const res = await fetch('http://localhost:3002/api/login', {
+          const res = await fetch(`${API_URL}/api/login`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email, password })
@@ -89,7 +89,7 @@ export default function App() {
       const address = e.target.address.value;
 
       try {
-          const res = await fetch('http://localhost:3002/api/register', {
+          const res = await fetch(`${API_URL}/api/register`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name, email, password, address })
@@ -129,11 +129,10 @@ export default function App() {
       }
       setProcessingPayment(true);
       
-      // Simulate Payment Delay
       setTimeout(async () => {
           try {
               const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-              const res = await fetch('http://localhost:3002/api/orders', {
+              const res = await fetch(`${API_URL}/api/orders`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ 
@@ -161,7 +160,7 @@ export default function App() {
 
   const handleReturn = async (orderId) => {
       if(confirm("Do you want to return this order?")) {
-          await fetch('http://localhost:3002/api/return', {
+          await fetch(`${API_URL}/api/return`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ orderId })
