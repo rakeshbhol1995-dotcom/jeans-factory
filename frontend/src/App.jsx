@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, X, Menu, Search, Filter, Star, CheckCircle, Trash2, User, LogOut, Package, RefreshCw, CreditCard, Wifi, WifiOff, Plus, Image as ImageIcon, Heart, LayoutDashboard, KeyRound } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const API_URL = "https://jeans-factory.onrender.com"; 
+const API_URL = "http://localhost:3002";
 const CLOUDINARY_CLOUD_NAME = "dxyzsample"; // Tuma Cloud Name
 const CLOUDINARY_PRESET = "jeans_upload";   // Tuma Upload Preset
 

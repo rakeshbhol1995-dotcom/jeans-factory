@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # --- Backend Service ---
+  backend:
+    build: ./backend
+    ports:
+      - "3002:3002"
+    environment:
+      # Tuma MongoDB Link eithi paste kara (Password thik achi ta check kara)
+      - MONGODB_URI=mongodb+srv://rakeshbhol1995_db_user:jeans123@cluster0.s5wqb4d.mongodb.net/jeansfactory
+    networks:
+      - jeans-network
+
+  # --- Frontend Service ---
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"  # <--- CHANGE: Ebe Port 5173 re khuliba (Try kara)
+    depends_on:
+      - backend
+    networks:
+      - jeans-network
+
+networks:
+  jeans-network:
+    driver: bridge

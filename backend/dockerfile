@@ -1,0 +1,20 @@
+# 1. Node.js (Engine) download kara
+FROM node:18
+
+# 2. Container bhitare /app folder banao
+WORKDIR /app
+
+# 3. Package file copy kara (List of softwares)
+COPY package*.json ./
+
+# 4. Sabu software install kara
+RUN npm install
+
+# 5. Baki sabu code copy kara
+COPY . .
+
+# 6. Port 3002 open kara (Jouthi backend chale)
+EXPOSE 3002
+
+# 7. Server start kara
+CMD ["node", "server.js"]
