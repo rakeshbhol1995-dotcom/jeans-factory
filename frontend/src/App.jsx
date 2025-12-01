@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, X, Menu, Search, Filter, Star, CheckCircle, Trash2, User, LogOut, Package, RefreshCw, CreditCard, Wifi, WifiOff, Plus, Image as ImageIcon, Heart, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, X, Menu, Search, Filter, Star, CheckCircle, Trash2, User, LogOut, Package, RefreshCw, CreditCard, Wifi, WifiOff, Plus, Image as ImageIcon, Heart, LayoutDashboard, KeyRound } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const API_URL = "https://jeans-factory.onrender.com"; 
@@ -7,8 +7,6 @@ const CLOUDINARY_CLOUD_NAME = "dxyzsample"; // Tuma Cloud Name
 const CLOUDINARY_PRESET = "jeans_upload";   // Tuma Upload Preset
 
 // --- COMPONENTS ---
-
-// 1. Toast Notification (Sundar Message)
 const Toast = ({ message, type, onClose }) => (
   <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-xl text-white transform transition-all duration-500 flex items-center ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
     {type === 'success' ? <CheckCircle className="w-5 h-5 mr-2"/> : <X className="w-5 h-5 mr-2"/>}
@@ -16,7 +14,6 @@ const Toast = ({ message, type, onClose }) => (
   </div>
 );
 
-// 2. Product Card Component
 const ProductCard = ({ product, addToCart, toggleWishlist, isWishlisted }) => (
   <div className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
     <div className="relative h-72 bg-gray-100 overflow-hidden">
@@ -29,7 +26,6 @@ const ProductCard = ({ product, addToCart, toggleWishlist, isWishlisted }) => (
       </button>
       <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
       
-      {/* Quick Add Button */}
       <button 
         onClick={() => addToCart(product)}
         className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-11/12 bg-white text-indigo-900 font-bold py-3 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 flex justify-center items-center gap-2 hover:bg-indigo-50"
@@ -74,13 +70,11 @@ export default function App() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
   const [backendStatus, setBackendStatus] = useState('Checking...');
-  const [toast, setToast] = useState(null); // Toast State
+  const [toast, setToast] = useState(null); 
 
-  // Admin State
   const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'Slim', gender: 'Men', image: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     if (token) {
         const savedUser = JSON.parse(localStorage.getItem('user'));
@@ -95,7 +89,6 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // --- API CALLS ---
   const fetchProducts = async () => {
     try {
       const res = await fetch(`${API_URL}/api/products`);
@@ -121,7 +114,6 @@ export default function App() {
       } catch(e) {}
   };
 
-  // --- AUTH ACTIONS ---
   const handleLogin = async (e) => {
       e.preventDefault();
       const email = e.target.email.value;
@@ -160,6 +152,27 @@ export default function App() {
       } catch(err) { showToast("Registration failed", "error"); }
   };
 
+  // --- RESET PASSWORD FUNCTION ---
+  const handleResetPassword = async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const newPassword = e.target.newPassword.value;
+
+      try {
+          const res = await fetch(`${API_URL}/api/reset-password`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, newPassword })
+          });
+          const data = await res.json();
+          if(res.ok) {
+              showToast("Password updated! Please login.");
+              setView('login');
+          } else {
+              showToast(data.error, "error");
+          }
+      } catch(err) { showToast("Failed to reset password", "error"); }
+  };
+
   const handleLogout = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -168,7 +181,6 @@ export default function App() {
       showToast("Logged out successfully");
   };
 
-  // --- SHOPPING ACTIONS ---
   const addToCart = (product) => {
       setCart(prev => {
           const exists = prev.find(item => item.id === product.id);
@@ -192,7 +204,6 @@ export default function App() {
       });
   };
 
-  // --- ADMIN & IMAGE UPLOAD ---
   const handleImageUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -276,7 +287,6 @@ export default function App() {
               <span onClick={() => setView('home')} className="text-2xl font-extrabold text-indigo-900 tracking-tighter cursor-pointer">Jeans<span className="text-indigo-600">Factory</span></span>
             </div>
 
-            {/* Desktop Search */}
             <div className="hidden md:flex flex-1 max-w-lg mx-4">
                 <div className="relative w-full">
                     <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
@@ -289,9 +299,12 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-              <button onClick={() => setView('add_product')} className="hidden sm:flex items-center gap-1 text-indigo-600 font-bold border border-indigo-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 text-sm">
-                  <Plus className="w-4 h-4"/> Sell
-              </button>
+              {/* Only show "Sell" button if user is admin (Case Insensitive Fix) */}
+              {user?.email?.toLowerCase() === "admin@jeans.com" && (
+                  <button onClick={() => setView('add_product')} className="hidden sm:flex items-center gap-1 text-indigo-600 font-bold border border-indigo-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 text-sm">
+                      <Plus className="w-4 h-4"/> Sell
+                  </button>
+              )}
 
               {user ? (
                   <div className="relative group">
@@ -304,6 +317,11 @@ export default function App() {
                   </div>
               ) : ( <button onClick={() => setView('login')} className="text-indigo-600 font-bold px-3 py-2">Login</button> )}
               
+              <button onClick={() => setView('wishlist')} className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <Heart className="w-6 h-6 text-gray-600" />
+                {wishlist.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">{wishlist.length}</span>}
+              </button>
+
               <button onClick={() => setView('cart')} className="relative p-2 hover:bg-gray-100 rounded-full">
                 <ShoppingCart className="h-6 w-6 text-gray-600" />
                 {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full px-1.5 text-xs border-2 border-white">{cart.reduce((a,c)=>a+c.quantity,0)}</span>}
@@ -311,7 +329,6 @@ export default function App() {
             </div>
           </div>
           
-          {/* Mobile Search */}
           <div className="md:hidden py-2 pb-3">
              <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -324,7 +341,6 @@ export default function App() {
       <div className="flex-grow">
           {view === 'home' && (
               <>
-                {/* Category Pills */}
                 <div className="bg-white border-b border-gray-100 sticky top-16 z-40 overflow-x-auto no-scrollbar">
                     <div className="max-w-7xl mx-auto px-4 py-3 flex gap-2">
                         {['All', 'Men', 'Women', 'Slim', 'Regular', 'Sale'].map(cat => (
@@ -335,7 +351,6 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* Hero */}
                 {selectedCategory === 'All' && !searchTerm && (
                     <div className="bg-indigo-900 py-12 px-4 text-center relative overflow-hidden">
                         <div className="relative z-10">
@@ -345,7 +360,6 @@ export default function App() {
                     </div>
                 )}
 
-                {/* Grid */}
                 <div className="max-w-7xl mx-auto px-4 py-8">
                     <div className="flex justify-between items-end mb-6">
                         <h2 className="text-xl font-bold text-gray-900">{searchTerm ? `Results for "${searchTerm}"` : `${selectedCategory} Collection`}</h2>
@@ -371,7 +385,33 @@ export default function App() {
               </>
           )}
 
-          {/* ADD PRODUCT / ADMIN VIEW */}
+          {view === 'wishlist' && (
+              <div className="max-w-7xl mx-auto px-4 py-8">
+                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                      <Heart className="w-6 h-6 text-red-500 fill-current"/> My Wishlist
+                  </h2>
+                  {wishlist.length === 0 ? (
+                      <div className="text-center py-20 bg-white rounded-2xl">
+                          <p className="text-gray-500 mb-4">Your wishlist is empty.</p>
+                          <button onClick={() => setView('home')} className="text-indigo-600 font-bold hover:underline">Start Shopping</button>
+                      </div>
+                  ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {wishlist.map(product => (
+                              <ProductCard 
+                                  key={product.id} 
+                                  product={product} 
+                                  addToCart={addToCart} 
+                                  toggleWishlist={toggleWishlist}
+                                  isWishlisted={true}
+                              />
+                          ))}
+                      </div>
+                  )}
+              </div>
+          )}
+
+          {/* ADMIN */}
           {view === 'add_product' && (
               <div className="max-w-2xl mx-auto px-4 py-8">
                   <div className="bg-white p-8 rounded-2xl shadow-lg border border-indigo-50">
@@ -407,19 +447,55 @@ export default function App() {
               </div>
           )}
 
-          {/* LOGIN & REGISTER */}
-          {(view === 'login' || view === 'register') && (
+          {/* AUTH (LOGIN/REGISTER/FORGOT PASSWORD) */}
+          {(view === 'login' || view === 'register' || view === 'forgot_password') && (
               <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 bg-gray-50">
                   <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-                      <div className="text-center mb-8"><h2 className="text-3xl font-extrabold">{view === 'login' ? 'Welcome Back' : 'Join Us'}</h2></div>
-                      <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="space-y-4">
-                          {view === 'register' && <input name="name" type="text" placeholder="Full Name" required className="w-full border p-3 rounded-lg" />}
-                          <input name="email" type="email" placeholder="Email" required className="w-full border p-3 rounded-lg" />
-                          <input name="password" type="password" placeholder="Password" required className="w-full border p-3 rounded-lg" />
-                          {view === 'register' && <textarea name="address" placeholder="Address" required className="w-full border p-3 rounded-lg" />}
-                          <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold">{view === 'login' ? 'Sign In' : 'Create Account'}</button>
-                      </form>
-                      <div className="mt-6 text-center"><button onClick={() => setView(view === 'login' ? 'register' : 'login')} className="text-indigo-600 font-medium hover:underline">{view === 'login' ? "New? Sign Up" : "Have account? Login"}</button></div>
+                      <div className="text-center mb-8">
+                          <h2 className="text-3xl font-extrabold">
+                              {view === 'login' ? 'Welcome Back' : view === 'register' ? 'Join Us' : 'Reset Password'}
+                          </h2>
+                      </div>
+                      
+                      {/* LOGIN FORM */}
+                      {view === 'login' && (
+                          <form onSubmit={handleLogin} className="space-y-4">
+                              <input name="email" type="email" placeholder="Email" required className="w-full border p-3 rounded-lg" />
+                              <input name="password" type="password" placeholder="Password" required className="w-full border p-3 rounded-lg" />
+                              <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold">Sign In</button>
+                              <div className="flex justify-between mt-4 text-sm">
+                                  <button type="button" onClick={() => setView('register')} className="text-indigo-600 font-medium">Create Account</button>
+                                  <button type="button" onClick={() => setView('forgot_password')} className="text-gray-500 hover:text-gray-700">Forgot Password?</button>
+                              </div>
+                          </form>
+                      )}
+
+                      {/* REGISTER FORM */}
+                      {view === 'register' && (
+                          <form onSubmit={handleRegister} className="space-y-4">
+                              <input name="name" type="text" placeholder="Full Name" required className="w-full border p-3 rounded-lg" />
+                              <input name="email" type="email" placeholder="Email" required className="w-full border p-3 rounded-lg" />
+                              <input name="password" type="password" placeholder="Password" required className="w-full border p-3 rounded-lg" />
+                              <textarea name="address" placeholder="Address" required className="w-full border p-3 rounded-lg" />
+                              <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold">Sign Up</button>
+                              <button type="button" onClick={() => setView('login')} className="text-indigo-600 text-sm w-full text-center mt-4">Back to Login</button>
+                          </form>
+                      )}
+
+                      {/* FORGOT PASSWORD FORM */}
+                      {view === 'forgot_password' && (
+                          <form onSubmit={handleResetPassword} className="space-y-4">
+                              <div className="bg-yellow-50 p-3 rounded text-xs text-yellow-800 mb-4 border border-yellow-200">
+                                  Note: For this demo, just enter your email and a new password directly.
+                              </div>
+                              <input name="email" type="email" placeholder="Enter your email" required className="w-full border p-3 rounded-lg" />
+                              <input name="newPassword" type="password" placeholder="Enter New Password" required className="w-full border p-3 rounded-lg" />
+                              <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+                                  <KeyRound className="w-4 h-4"/> Reset Password
+                              </button>
+                              <button type="button" onClick={() => setView('login')} className="text-indigo-600 text-sm w-full text-center mt-4">Back to Login</button>
+                          </form>
+                      )}
                   </div>
               </div>
           )}
